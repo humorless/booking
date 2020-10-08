@@ -1,0 +1,63 @@
+{
+:booking/data000 {:txes [
+  [[:db/add #db/id [:db.part/user] :db/ident :user.team/team1]
+   [:db/add #db/id [:db.part/user] :db/ident :user.team/team2]
+   [:db/add #db/id [:db.part/user] :db/ident :user.team/team3]]
+  [{:product/id :product.type/mvp
+    :product/name "p-name-0"}
+   {:product/id :product.type/big-4
+    :product/name "p-name-1"}]
+  [{:client/id "c-id-0"
+    :client/name "c-name-0"}
+   {:client/id "c-id-1"
+    :client/name "c-name-1"}]
+  [{:user/name   "Good Name A"
+    :user/email  "s-1@example.com"
+    :user/team   :user.team/team1
+    :user/status :user.status/active}
+   {:user/name   "Good Name B"
+    :user/email  "s-2@example.com"
+    :user/team   :user.team/team2
+    :user/status :user.status/active}]
+]}
+:booking/data001 {:txes [
+  [{:booking/id #uuid "3417b0da-0d25-11eb-adc1-0242ac120002"
+    :booking/sales [:user/email "s-1@example.com"]
+    :booking/client [:client/id "c-id-0"]
+    :booking/date #inst "2020-01-01"}
+   {:booking/id #uuid "b4e6a897-7c7f-4b33-9782-62d097434892"
+    :booking/sales [:user/email "s-2@example.com"]
+    :booking/client [:client/id "c-id-1"]
+    :booking/date #inst "2020-01-01"} ]
+  [{:calendar/date #inst "2020-01-01"
+    :calendar/product [:product/id :product.type/mvp]}
+   {:calendar/date #inst "2020-01-02"
+    :calendar/product [:product/id :product.type/mvp]}
+   {:calendar/date #inst "2020-01-03"
+    :calendar/product [:product/id :product.type/mvp]}
+   {:calendar/date #inst "2020-01-04"
+    :calendar/product [:product/id :product.type/mvp]}
+   {:calendar/date #inst "2020-01-05"
+    :calendar/product [:product/id :product.type/mvp]
+    :calendar/booking [:booking/id #uuid "3417b0da-0d25-11eb-adc1-0242ac120002"]}
+   {:calendar/date #inst "2020-01-06"
+    :calendar/product [:product/id :product.type/mvp]}
+   {:calendar/date #inst "2020-01-07"
+    :calendar/product [:product/id :product.type/mvp]}]
+  [{:calendar/date #inst "2020-01-01"
+    :calendar/product [:product/id :product.type/big-4]}
+   {:calendar/date #inst "2020-01-02"
+    :calendar/product [:product/id :product.type/big-4]}
+   {:calendar/date #inst "2020-01-03"
+    :calendar/product [:product/id :product.type/big-4]}
+   {:calendar/date #inst "2020-01-04"
+    :calendar/product [:product/id :product.type/big-4]}
+   {:calendar/date #inst "2020-01-05"
+    :calendar/product [:product/id :product.type/big-4]}
+   {:calendar/date #inst "2020-01-06"
+    :calendar/product [:product/id :product.type/big-4]
+    :calendar/booking [:booking/id #uuid "b4e6a897-7c7f-4b33-9782-62d097434892"] }
+   {:calendar/date #inst "2020-01-07"
+    :calendar/product [:product/id :product.type/big-4]}]
+]}
+}
