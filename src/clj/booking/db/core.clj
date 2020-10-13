@@ -1,13 +1,17 @@
 (ns booking.db.core
   (:require
-    [datomic.api :as d]
-    [io.rkn.conformity :as c]
-    [mount.core :refer [defstate]]
-    [booking.config :refer [env]]))
+   [datomic.api :as d]
+   [io.rkn.conformity :as c]
+   [mount.core :refer [defstate]]
+   [booking.config :refer [env]]))
 
 (defstate conn
   :start (do (-> env :database-url d/create-database) (-> env :database-url d/connect))
   :stop (-> conn .release))
+
+(defn setup-app-db [fname]
+  (let [norms-map (c/read-resource fname)]
+    (c/ensure-conforms conn norms-map)))
 
 (defn install-schema
   "This function expected to be called at system start up.
@@ -41,35 +45,43 @@
   [conn]
   (seq (d/tx-range (d/log conn) nil nil)))
 
-(defn add-user
-  "e.g.
-    (add-user conn {:id \"aaa\"
-                    :screen-name \"AAA\"
-                    :status :user.status/active
-                    :email \"aaa@example.com\" })"
-  [conn {:keys [id screen-name status email]}]
-  @(d/transact conn [{:user/id         id
-                      :user/name       screen-name
-                      :user/status     status
-                      :user/email      email}]))
+(defn time-range->inventory-eids
+  [db begin end]
+  (d/q '[:find [?e ...]
+         :in $ ?date-begin ?date-end ?less
+         :where
+         [?e :calendar/date ?d]
+         [(missing? $ ?e :calendar/booking)]
+         [(compare ?date-begin ?d) ?less]
+         [(compare ?d ?date-end) ?less]]
+       db begin end -1))
 
-(defn find-one-by
-  "Given db value and an (attr/val), return the user as EntityMap (datomic.query.EntityMap)
-   If there is no result, return nil.
+(defn time-range->booking-eids
+  [db begin end]
+  (d/q '[:find [?e ...]
+         :in $ ?date-begin ?date-end ?less
+         :where
+         [?e :calendar/date ?d]
+         [?e :calendar/booking _]
+         [(compare ?date-begin ?d) ?less]
+         [(compare ?d ?date-end) ?less]]
+       db begin end -1))
 
-   e.g.
-    (d/touch (find-one-by (d/db conn) :user/email \"user@example.com\"))
-    => show all fields
-    (:user/first-name (find-one-by (d/db conn) :user/email \"user@example.com\"))
-    => show first-name field"
-  [db attr val]
-  (d/entity db
-            ;;find Specifications using ':find ?a .' will return single scalar
-            (d/q '[:find ?e .
-                   :in $ ?attr ?val
-                   :where [?e ?attr ?val]]
-                 db attr val)))
+(defn eid->calendar-entity [db eid]
+  (d/pull db '[:calendar/date
+               {:calendar/booking [*]}
+               {:calendar/product [:product/id]}] eid))
 
+;; testing code
+(def d-begin #inst "2020-01-04")
+(def d-end #inst "2020-01-07")
 
-(defn find-user [db id]
-  (d/touch (find-one-by db :user/id id)))
+(def show-time-range-inventory
+  (map
+   #(eid->calendar-entity (d/db conn) %)
+   (time-range->inventory-eids (d/db conn) d-begin d-end)))
+
+(def show-time-range-booking
+  (map
+   #(eid->calendar-entity (d/db conn) %)
+   (time-range->booking-eids (d/db conn) d-begin d-end)))
