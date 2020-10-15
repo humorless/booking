@@ -48,24 +48,32 @@
 (defn time-range->inventory-eids
   [db begin end]
   (d/q '[:find [?e ...]
-         :in $ ?date-begin ?date-end ?less
+         :in $ ?date-begin ?date-end ?less ?zero
          :where
          [?e :calendar/date ?d]
          [(missing? $ ?e :calendar/booking)]
-         [(compare ?date-begin ?d) ?less]
-         [(compare ?d ?date-end) ?less]]
-       db begin end -1))
+         (or-join [?date-begin ?d ?less ?zero]
+                  [(compare ?date-begin ?d) ?less]
+                  [(compare ?date-begin ?d) ?zero])
+         (or-join [?date-end ?d ?less ?zero]
+                  [(compare ?d ?date-end) ?less]
+                  [(compare ?d ?date-end) ?zero])]
+       db begin end -1 0))
 
 (defn time-range->booking-eids
   [db begin end]
   (d/q '[:find [?e ...]
-         :in $ ?date-begin ?date-end ?less
+         :in $ ?date-begin ?date-end ?less ?zero
          :where
          [?e :calendar/date ?d]
          [?e :calendar/booking _]
-         [(compare ?date-begin ?d) ?less]
-         [(compare ?d ?date-end) ?less]]
-       db begin end -1))
+         (or-join [?date-begin ?d ?less ?zero]
+                  [(compare ?date-begin ?d) ?less]
+                  [(compare ?date-begin ?d) ?zero])
+         (or-join [?date-end ?d ?less ?zero]
+                  [(compare ?d ?date-end) ?less]
+                  [(compare ?d ?date-end) ?zero])]
+       db begin end -1 0))
 
 (defn eid->calendar-entity [db eid]
   (d/pull db '[:calendar/date
@@ -73,15 +81,15 @@
                {:calendar/product [:product/id]}] eid))
 
 ;; testing code
-(def d-begin #inst "2020-01-04")
-(def d-end #inst "2020-01-07")
+(def d-begin #inst "2020-01-05")
+(def d-end #inst "2020-01-06")
 
-(def show-time-range-inventory
+(defn show-time-range-inventory []
   (map
    #(eid->calendar-entity (d/db conn) %)
    (time-range->inventory-eids (d/db conn) d-begin d-end)))
 
-(def show-time-range-booking
+(defn show-time-range-booking []
   (map
    #(eid->calendar-entity (d/db conn) %)
    (time-range->booking-eids (d/db conn) d-begin d-end)))
