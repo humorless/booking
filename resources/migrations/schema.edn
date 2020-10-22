@@ -87,12 +87,17 @@
    :db/valueType          :db.type/instant
    :db/cardinality        :db.cardinality/one}
 
-  {:db/doc                "The product of this (date, product) calendar"
+  {:db/doc                "The product of this (date, product, approved) calendar"
    :db/ident              :calendar/product
    :db/valueType          :db.type/ref
    :db/cardinality        :db.cardinality/one}
 
-  {:db/doc                "The booking entity of this (date, product) calendar"
+  {:db/doc                "The approved status of this (date, product, approved) calendar"
+   :db/ident              :calendar/approved
+   :db/valueType          :db.type/boolean
+   :db/cardinality        :db.cardinality/one}
+
+  {:db/doc                "The booking entity of this (date, product, approved) calendar"
    :db/ident              :calendar/booking
    :db/valueType          :db.type/ref
    :db/cardinality        :db.cardinality/one}
